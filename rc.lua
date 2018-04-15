@@ -61,7 +61,7 @@ end
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 --beautiful.init(nvlled.random_theme())
-beautiful.init(conf_dir .. "themes/zenburn-red/theme.lua")
+beautiful.init(conf_dir .. "themes/zenburn/theme.lua")
 beautiful.get().wallpaper = nvlled.random_bg()
 
 -- This is used later as the default terminal and editor to run.
@@ -79,19 +79,18 @@ modkey = "Mod1"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
-    awful.layout.suit.floating,
     awful.layout.suit.tile,
-    awful.layout.suit.tile.left,
+    --awful.layout.suit.tile.left,
     awful.layout.suit.tile.bottom,
-    awful.layout.suit.tile.top,
-    awful.layout.suit.fair,
-    awful.layout.suit.fair.horizontal,
-    awful.layout.suit.spiral,
-    awful.layout.suit.spiral.dwindle,
+    --awful.layout.suit.tile.top,
+    --awful.layout.suit.fair,
+    --awful.layout.suit.fair.horizontal,
+    --awful.layout.suit.spiral,
+    --awful.layout.suit.spiral.dwindle,
     awful.layout.suit.max,
-    awful.layout.suit.max.fullscreen,
     awful.layout.suit.magnifier,
     awful.layout.suit.corner.nw,
+    awful.layout.suit.floating,
     -- awful.layout.suit.corner.ne,
     -- awful.layout.suit.corner.sw,
     -- awful.layout.suit.corner.se,
@@ -324,6 +323,9 @@ globalkeys = gears.table.join(
               function () 
                   local ok = nvlled.readCwd(function(cwd)
                     print("cwd " .. cwd)
+                    naughty.notify{
+                        text = cwd,
+                    }
                     awful.spawn(terminal .. " -cd " .. cwd)
                   end)
                   if not ok then
@@ -331,6 +333,7 @@ globalkeys = gears.table.join(
                   end
               end,
               {description = "open a terminal", group = "launcher"}),
+
 
     awful.key({ modkey, "Control" }, "b", 
                 function() 
@@ -399,12 +402,12 @@ globalkeys = gears.table.join(
 )
 
 clientkeys = gears.table.join(
-    --awful.key({ modkey,           }, "f",
-    --    function (c)
-    --        c.fullscreen = not c.fullscreen
-    --        c:raise()
-    --    end,
-    --    {description = "toggle fullscreen", group = "client"}),
+    awful.key({ modkey, "Ctrl"    }, "f",
+        function (c)
+            c.fullscreen = not c.fullscreen
+            c:raise()
+        end,
+        {description = "toggle fullscreen", group = "client"}),
     awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end,
               {description = "close", group = "client"}),
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle                     ,
@@ -477,18 +480,18 @@ for i = 1, 9 do
                           end
                      end
                   end,
-                  {description = "move focused client to tag #"..i, group = "tag"}),
+                  {description = "move focused client to tag #"..i, group = "tag"})
         -- Toggle tag on focused client.
-        awful.key({ modkey, "Control", "Shift" }, "#" .. i + 9,
-                  function ()
-                      if client.focus then
-                          local tag = client.focus.screen.tags[i]
-                          if tag then
-                              client.focus:toggle_tag(tag)
-                          end
-                      end
-                  end,
-                  {description = "toggle focused client on tag #" .. i, group = "tag"})
+        --awful.key({ modkey, "Control", "Shift" }, "#" .. i + 9,
+        --          function ()
+        --              if client.focus then
+        --                  local tag = client.focus.screen.tags[i]
+        --                  if tag then
+        --                      client.focus:toggle_tag(tag)
+        --                  end
+        --              end
+        --          end,
+        --          {description = "toggle focused client on tag #" .. i, group = "tag"})
     )
 end
 

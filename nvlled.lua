@@ -1,17 +1,19 @@
+local os = require("os")
 local naughty = require("naughty")
 local gears = require("gears")
 local std = require("std")
 local awful = require("awful")
 local conf_dir = awful.util.get_configuration_dir()
 local dir = require("pl.dir")
+local string = require("string")
 
 local notify = {
     ids = {},
     defaults = {
         text = "*crickets*",
         position = "top_middle",
-        font = "sans 15",
-        bg = "#522",
+        font = "sans 17",
+        bg = "#322",
         fg = "white",
     },
 }
@@ -20,7 +22,6 @@ function notify.fn(args)
     local args_ = std.table.clone (notify.defaults)
     std.table.merge(args_, args)
     args = args_
-    crap1(args)
 
     args.replaces_id = notify.ids[args.id]
     local t = naughty.notify(args)
@@ -45,7 +46,6 @@ function spawn_on_current_tag(cmd)
     if not tag then
         return
     end
-    crap1(tag.name)
     notify.fn{
         text = "spawn " .. cmd .. " on tag:" .. tag.name
     }
@@ -53,7 +53,6 @@ function spawn_on_current_tag(cmd)
         local pid = awful.spawn(cmd, {
             tag = tag,
         }, function(shit)
-            crap1(shit)
         end)
     end)
 
@@ -74,6 +73,67 @@ function spawn_on_current_tag(cmd)
     --    client.disconnect_signal("manage", fn)
     --end
     --client.connect_signal("manage", fn)
+end
+
+local _timer = {
+    notif = nil,
+    inst = nil,
+}
+function hideTimer(args) 
+    if _timer.inst then
+        _timer.inst:stop()
+        _timer.inst = nil
+    end
+    if _timer.notif then
+        naughty.destroy(_timer.notif)
+        _timer.notif = nil
+    end
+end
+
+-- TODO: there must be only one instance of the timer 
+function showTimer(args) 
+    args = args or {}
+    local args_ = std.table.clone (notify.defaults)
+    std.table.merge(args_, args)
+    args = args_
+
+    args["timeout"] = -1
+    args["position"] = "top_left"
+    args["text"] = ""
+    args["icon"] = conf_dir .. "/rec.png"
+
+    local text = args["text"] or "recording..."
+    local id = args["id"] or "record"
+    local start_time = os.time()
+    _timer.inst = nil
+    _timer.notif = naughty.notify(args)
+
+    args["run"] = stopTimer
+
+    _timer.inst = gears.timer{
+        timeout = 1, -- seconds
+        autostart = true,
+        callback = function()
+            local now = os.time()
+            local t1 = os.date("*t", start_time)
+            local t2 = os.date("*t", now)
+            local hours = leftpad(t2["hour"] - t1["hour"], 2, "0")
+
+            local diff = now - start_time
+            local time_str = hours .. ":" .. os.date("%M:%S", diff)
+            args["text"] = time_str .. " " .. text
+            naughty.replace_text(
+                _timer.notif, args["title"], args["text"]
+            )
+            --notify.fn(args)
+        end
+    }
+end
+
+function leftpad(s, n, c)
+    s = tostring(s)
+    local x = n - string.len(s)
+    return string.rep(tostring(c), x) .. s
 end
 
 function setTimeout(seconds, fn)
@@ -120,7 +180,6 @@ function readCwd(fn)
                 local n = std.string.find(words[2], "bash")
                 if n then
                     local id = words[1]
-                    print("id " .. id)
                     awful.spawn.easy_async(
                         "readlink /proc/"..id.."/cwd",
                         function(cwd) 
@@ -144,4 +203,7 @@ return {
     random_theme = random_theme,
     spawn_on_current_tag = spawn_on_current_tag,
     setTimeout = setTimeout,
+    showTimer = showTimer,
+    hideTimer = hideTimer,
+    leftpad = leftpad,
 }
